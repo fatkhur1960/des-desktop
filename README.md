@@ -79,10 +79,25 @@ Terakhir kita perlu mengunduh Windows Edge Webview, kita dapat mengunduh Edge We
 ## Menjalankan Program (_Running Program_)
 Setelah kebutuhan sistem terpenuhi selanjutnya kita lakukan langkah berikut:
 ```bash
+# Clone git repository
 $ git clone https://github.com/fatkhur1960/des-desktop.git && cd des-desktop
+
+# Install dependency
 $ yarn install 
+```
+```bash
+# Jika kita menggunakan mesin Linux/Macos
 $ cd src-tauri && cp .env.example .env
 $ source .env && cd ..
+```
+```powershell
+# Jika kita menggunakan mesin Windows
+setx DATABASE_URL ex_databse.db
+```
+```bash
+# Kita jalankan migrasi database
 $ diesel setup && diesel migration run 
+
+# Kita jalankan program
 $ yarn tauri:serve 
 ```
