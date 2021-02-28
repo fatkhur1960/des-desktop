@@ -81,7 +81,8 @@ Setelah kebutuhan sistem terpenuhi selanjutnya kita lakukan langkah berikut:
 ```bash
 $ git clone https://github.com/fatkhur1960/des-desktop.git && cd des-desktop
 $ yarn install 
-$ cp .env.example .env && source .env 
+$ cd src-tauri && cp .env.example .env
+$ source .env && cd ..
 $ diesel setup && diesel migration run 
 $ yarn tauri:serve 
 ```
