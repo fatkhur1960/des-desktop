@@ -1,0 +1,38 @@
+[package]
+name = "des_ui"
+version = "0.1.0"
+description = "A Tauri App"
+authors = [ "fatkhur" ]
+license = ""
+repository = ""
+default-run = "main"
+edition = "2018"
+build = "src/build.rs"
+
+[dependencies]
+serde_json = "1.0"
+serde = { version = "1.0", features = [ "derive" ] }
+tauri = { version = "0.11", features = [ "all-api" ] }
+failure = "0.1.8"
+log = "0.4.0"
+env_logger = "0.8.3"
+des-macros = { path = "./des-macros" }
+diesel = { version = "1.4.5", features = [ "sqlite", "r2d2", "chrono" ] }
+r2d2 = "0.8.9"
+r2d2-diesel = "1.0.0"
+chrono = { version = "0.4", features = [ "serde" ] }
+chrono-tz = "0.5.1"
+dotenv = "0.15.0"
+lazy_static = "1.2"
+bcrypt = "0.9.0"
+
+[target."cfg(windows)".build-dependencies]
+winres = "0.1"
+
+[features]
+embedded-server = [ "tauri/embedded-server" ]
+no-server = [ "tauri/no-server" ]
+
+[[bin]]
+name = "main"
+path = "src/main.rs"
