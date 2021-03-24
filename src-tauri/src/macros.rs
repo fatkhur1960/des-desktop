@@ -18,6 +18,7 @@ macro_rules! impl_service {
             match serde_json::from_str::<ServiceState>(arg) {
                 Err(e) => Err(e.to_string()),
                 Ok(state) => {
+                    let app_state = crate::service::AppState::new();
                     match state {
                         $(ServiceState::$state {
                             route,
@@ -27,7 +28,7 @@ macro_rules! impl_service {
                         } => tauri::execute_promise(
                             webview,
                             move || {
-                                $state::wire(route, payload)
+                                $state::wire(&app_state, route, payload)
                                     .map_err(|e| ApiResult::error(e.message).into())
                             },
                             callback,

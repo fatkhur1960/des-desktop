@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 pub struct ApiResult<T> {
   error: bool,
   message: String,
-  data: Option<T>,
+  pub data: Option<T>,
 }
 
 impl<T: Serialize> ApiResult<T> {

@@ -3,13 +3,10 @@ FROM rust:1.50-slim
 RUN echo "-----> Installing tools"
 RUN apt update && apt install -y libwebkit2gtk-4.0-dev \
     build-essential \
-    wget \
     libssl-dev \
-    appmenu-gtk3-module \
-    libgtk-3-dev \
-    squashfs-tools
+    libgtk-3-dev 
 RUN apt-get install -y curl unzip \
-        sqlite3 node \
+        sqlite3 nodejs libsqlite0 \
     && apt-get clean && rm -rf /var/cache/apt/* && rm -rf /var/lib/apt/lists/* && rm -rf /tmp/*
 
 # RUN echo "-----> Installing Rust channel stable"

@@ -18,6 +18,12 @@ pub struct IdPayload {
 }
 
 #[derive(Serialize, Deserialize)]
+pub struct FcPayload {
+    pub id: i32,
+    pub next: i32,
+}
+
+#[derive(Serialize, Deserialize)]
 pub struct EntriesResult<T> {
     pub entries: Vec<T>,
     pub count: i64,

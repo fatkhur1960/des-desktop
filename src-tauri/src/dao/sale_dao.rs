@@ -166,6 +166,24 @@ impl<'a> SaleDao<'a> {
         ))
     }
 
+    /// Get latest sales history date based
+    pub fn get_latest_sale(&self, item_id: i32) -> Result<SaleHistory> {
+        use crate::schema::sales::{self, dsl};
+
+        sales::table
+            .filter(dsl::item_id.eq(item_id))
+            .select((
+                dsl::id,
+                dsl::item_id,
+                dsl::sale_value,
+                strftime("%m", dsl::ts),
+                strftime("%Y", dsl::ts),
+            ))
+            .order(dsl::ts.desc())
+            .first(self.db)
+            .map_err(From::from)
+    }
+
     /// Get stock histories based on Item
     pub fn get_sale_histories(
         &self,
@@ -209,9 +227,8 @@ impl<'a> SaleDao<'a> {
                         strftime("%m", dsl::ts),
                         strftime("%Y", dsl::ts),
                     ))
-                    .limit(12)
+                    .limit(24)
                     .offset(0)
-                    .order(dsl::id.desc())
                     .order(dsl::ts.asc())
                     .load::<SaleHistory>(self.db)
                     .unwrap_or(Vec::new());

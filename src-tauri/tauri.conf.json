@@ -6,12 +6,12 @@
     "beforeBuildCommand": ""
   },
   "ctx": {
-    "debug": true,
+    "debug": false,
     "exitOnPanic": false
   },
   "tauri": {
     "embeddedServer": {
-      "active": true
+      "active": false
     },
     "bundle": {
       "active": true,
@@ -29,8 +29,7 @@
         "icons/icon.ico"
       ],
       "resources": [
-        "tokoku.db",
-        ".env"
+        "tokoku.db"
       ],
       "externalBin": [],
       "copyright": "fatkhuranonym@gmail.com",
@@ -49,14 +48,23 @@
       "exceptionDomain": ""
     },
     "allowlist": {
-      "all": true
+      "all": false,
+      "answer": true,
+      "event": true, 
+      "execute": false,
+      "listFiles": false,
+      "open": false, 
+      "readBinaryFile": false,
+      "readTextFile": false,
+      "setTitle": true, 
+      "writeFile": true
     },
     "window": {
       "title": "DES - TokoKu",
       "width": 800,
       "height": 600,
       "resizable": true,
-      "fullscreen": false
+      "fullscreen": true
     },
     "security": {
       "csp": "default-src blob: data: filesystem: ws: http: https: 'unsafe-eval' 'unsafe-inline'"

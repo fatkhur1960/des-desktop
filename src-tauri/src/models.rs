@@ -1,7 +1,7 @@
 //! Models definitions
 use crate::schema::{items, sales};
 use crate::ID;
-use chrono::NaiveDateTime;
+use chrono::{NaiveDate, NaiveDateTime};
 use serde::{Deserialize, Serialize};
 use diesel::prelude::*;
 
@@ -45,7 +45,7 @@ pub struct Item {
 }
 
 #[doc(hidden)]
-#[derive(Identifiable, Associations, PartialEq, Debug, Queryable, Serialize, Clone)]
+#[derive(Identifiable, Associations, PartialEq, Deserialize, Debug, Queryable, Serialize, Clone)]
 #[belongs_to(Item)]
 #[table_name = "sales"]
 pub struct SaleHistory {
@@ -63,3 +63,19 @@ pub struct SaleItemHistory {
     pub item_name: String,
     pub sales: Vec<SaleHistory>,
 }
+
+#[doc(hidden)]
+#[derive(Debug, Deserialize, Serialize, Clone, Eq, Ord, PartialOrd, PartialEq)]
+pub struct ForecastHistory {
+    pub sale_value: i32,
+    pub date: NaiveDate,
+}
+
+#[doc(hidden)]
+#[derive(Debug, Deserialize, Queryable, Serialize, Clone)]
+pub struct ForecastResult {
+    pub real: Vec<ForecastHistory>,
+    pub forecast: Vec<ForecastHistory>,
+    pub alpha: f64,
+}
+

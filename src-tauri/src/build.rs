@@ -7,6 +7,7 @@ fn main() {
         let mut res = winres::WindowsResource::new();
         res.set_icon_with_id("icons/icon.ico", "32512");
         res.compile().expect("Unable to find visual studio tools");
+        tauri
     } else {
         panic!("No Icon.ico found. Please add one or check the path");
     }

@@ -48,7 +48,7 @@ Selanjutnya, direkomendasikan mengunduh [nvm-windows](https://github.com/coreybu
 Kemudian jalankan perintah berikut dari PowerShell Administratif dan tekan Y saat diminta:
 
 ```powershell
-nvm install latest && nvm use {{version}}
+nvm install node latest && nvm use {{version}}
 npm install -g yarn
 ```
 
@@ -59,7 +59,7 @@ Sekarang kita perlu menginstal Rust. Cara termudah untuk melakukannya adalah den
 
 Unduh dan instal varian yang tepat untuk arsitektur komputer kita. Setelah selesai, buka PowerShell dan masukkan:
 ```powershell
-cargo install diesel_cli --no-default-features --features sqlite
+cargo install diesel_cli --no-default-features --features "sqlite-bundled"
 cargo install tauri-bundler --force
 ```
 #### Enable Loopback

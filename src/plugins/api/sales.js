@@ -1,9 +1,20 @@
 import Vue from 'vue'
 import Api from './index'
 
-export default class Item {
+export default class Sale {
   constructor() {
     this.api = new Api('saleService')
+    this.fcApi = new Api('forecastService')
+  }
+
+  async predict(payload) {
+    try {
+      const result = await this.fcApi.call('predict', payload)
+      return result
+    } catch (e) {
+      Vue.error(e)
+      throw e
+    }
   }
 
   async addSale(payload) {
@@ -26,9 +37,19 @@ export default class Item {
     }
   }
 
-  async getSales(limit = 10, offset = 0) {
+  async getSales(
+    limit = 10,
+    offset = 0,
+    { id = null, month = null, year = null },
+  ) {
     try {
-      const result = await this.api.call('get_sales', { limit, offset })
+      const result = await this.api.call('get_sales', {
+        id,
+        limit,
+        offset,
+        month,
+        year,
+      })
       return result
     } catch (e) {
       Vue.error(e)

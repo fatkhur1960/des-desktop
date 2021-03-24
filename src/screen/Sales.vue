@@ -1,11 +1,45 @@
 <template>
   <div class="ui stackable grid">
     <div class="column">
-      <div class="ui vertical basic clearing page-title">
-        <h1 class="ui left floated header">Data Penjualan</h1>
-        <sui-button primary @click.native="toggle">
-          Tambahkan Penjualan
-        </sui-button>
+      <div class="ui grid vertical basic clearing page-title">
+        <div class="seven wide column">
+          <h1 class="ui left floated header">Data Penjualan</h1>
+          <sui-button primary @click.native="toggle">
+            Tambahkan Penjualan
+          </sui-button>
+        </div>
+        <div class="nine wide column">
+          <sui-form spellcheck="false">
+            <sui-form-fields fields="three">
+              <sui-form-field>
+                <Autocomplete ref="input" @itemSelected="onItemSelected" />
+              </sui-form-field>
+              <sui-form-field>
+                <datepicker
+                  minimum-view="month"
+                  format="MMMM yyyy"
+                  placeholder="Periode"
+                  v-model="date"
+                  :language="lang"
+                />
+              </sui-form-field>
+              <sui-form-field>
+                <sui-button
+                  @click.prevent="submit"
+                  primary
+                  content="Cari"
+                  icon="find"
+                />
+                <sui-button
+                  color="orange"
+                  content="Reset"
+                  @click.prevent="reset"
+                  icon="close"
+                />
+              </sui-form-field>
+            </sui-form-fields>
+          </sui-form>
+        </div>
       </div>
       <AddSaleModal :show="open" @close="toggle" :onSaved="getItems" />
       <div class="dimmable" style="margin: 1em 0;">
@@ -88,9 +122,12 @@
 <script>
 import AddSaleModal from '@/components/modals/AddSale'
 import EditSale from '@/components/modals/EditSale'
+import Autocomplete from '@/components/Autocomplete'
+import Datepicker from 'vuejs-datepicker'
+import langID from '@/plugins/id'
 
 export default {
-  components: { AddSaleModal, EditSale },
+  components: { AddSaleModal, EditSale, Autocomplete, Datepicker },
   data() {
     return {
       open: false,
@@ -102,6 +139,8 @@ export default {
       currentPage: 1,
       activeModal: 0,
       targetItem: {},
+      date: '',
+      lang: langID,
     }
   },
   computed: {
@@ -113,6 +152,27 @@ export default {
     this.getItems()
   },
   methods: {
+    onItemSelected(item) {
+      this.targetItem = item ?? null
+    },
+    submit() {
+      const month = this.date ? this.$moment(this.date).format('MM') : null
+      const year = this.date ? this.$moment(this.date).format('YYYY') : null
+      this.getItems(
+        this.currentPage - 1,
+        this.targetItem ? this.targetItem.id : null,
+        month,
+        year,
+      )
+      return
+    },
+    reset() {
+      this.targetItem = null
+      this.$refs['input'].search = ''
+      this.date = null
+      this.getItems()
+      return
+    },
     getOverallIndex: function (index) {
       return this.$itemNum(this.currentPage, this.perPage, index)
     },
@@ -183,10 +243,10 @@ export default {
           this.itemLoading = false
         })
     },
-    getItems(offset = 0) {
+    getItems(offset = 0, id = null, month = null, year = null) {
       this.itemLoading = true
       this.$api.sale
-        .getSales(this.perPage, offset)
+        .getSales(this.perPage, offset, { id, month, year })
         .then((res) => {
           let entries = res.data.entries
           this.items = entries

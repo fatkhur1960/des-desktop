@@ -8,6 +8,7 @@
       @keyup.down="onArrowDown"
       @keyup.up="onArrowUp"
       @keyup.enter="onEnter"
+      required
       v-model="search"
     />
 

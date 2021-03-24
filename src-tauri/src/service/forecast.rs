@@ -1,28 +1,16 @@
-use super::{EntriesResult, Error as ServiceError, IdPayload, PayloadEntries, QueryFilter};
-use chrono::{NaiveDateTime, Utc};
+use super::{
+    EntriesResult, Error as ServiceError, FcPayload, IdPayload, PayloadEntries, QueryFilter,
+};
+use chrono::{NaiveDate, NaiveDateTime, Utc};
 use serde::{Deserialize, Serialize};
 
 use crate::{
     dao::{item_dao::ItemDao, sale_dao::SaleDao},
     error::ErrorCode,
-    models::{self, SaleItem},
-    ApiResult,
     forecast_util::Forecast,
+    models::{self, ForecastHistory, ForecastResult, SaleHistory, SaleItem},
+    ApiResult,
 };
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct AddSale {
-    pub item_id: i32,
-    pub sale_value: i32,
-    pub ts: NaiveDateTime,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct UpdateSale {
-    pub id: i32,
-    pub sale_value: Option<i32>,
-    pub ts: Option<NaiveDateTime>,
-}
 
 #[derive(Default)]
 pub struct ForecastService;
@@ -30,80 +18,79 @@ pub struct ForecastService;
 #[service]
 impl ForecastService {
     #[route]
-    pub fn predict(payload: IdPayload) -> ApiResult<String> {
+    pub fn predict(payload: FcPayload) -> ApiResult<ForecastResult> {
         let conn = state.db();
         let sale_dao = SaleDao::new(&conn);
         let item_dao = ItemDao::new(&conn);
 
         let item = item_dao.get_by_id(payload.id)?;
+        let latest = sale_dao.get_latest_sale(item.id)?;
         let (ds, _) = sale_dao.get_sales_by_item(item.id)?;
 
-        let mut forecast = Forecast::new(ds);
+        let mut forecast = Forecast::new(ds.clone());
         let (_, alpha) = forecast.get_optimized_setting();
-        let res = forecast.forecast(Some(alpha), 1, false);
+        let res = forecast.forecast(Some(alpha), payload.next, false);
 
-        Ok(ApiResult::success(format!("Penjualan disimpan")))
-    }
+        let mut reset_month = 0;
+        let mut round = 0;
 
-    #[route]
-    pub fn update_sale(payload: UpdateSale) -> ApiResult<String> {
-        let conn = state.db();
-        let dao = SaleDao::new(&conn);
-        let sale = dao.get_by_id(payload.id)?;
+        let tmp_month = latest.month.parse::<i32>().expect("cannot parse month");
+        let tmp_year = latest.year.parse::<i32>().expect("cannot parse year");
 
-        dao.update(
-            payload.id,
-            payload.sale_value.unwrap_or(sale.sale_value),
-            payload.ts.unwrap_or(sale.ts),
-        )?;
+        let mut real: Vec<ForecastHistory> = ds
+            .into_iter()
+            .map(|a| {
+                let month = a.month.parse::<u32>().unwrap();
+                let year = a.year.parse::<i32>().unwrap();
 
-        let item_dao = ItemDao::new(&conn);
-        let item = item_dao.get_by_id(sale.item_id)?;
+                ForecastHistory {
+                    sale_value: a.sale_value,
+                    date: NaiveDate::from_ymd(year, month, 10),
+                }
+            })
+            .collect();
 
-        Ok(ApiResult::success(format!(
-            "Penjualan {} diupdate",
-            &item.item_name.clone()
-        )))
-    }
+        let mut forecast: Vec<ForecastHistory> = res
+            .into_iter()
+            .enumerate()
+            .map(|(index, f)| {
+                let mut m = tmp_month;
 
-    #[route]
-    pub fn get_sales(payload: PayloadEntries) -> ApiResult<EntriesResult<models::SaleItem>> {
-        let conn = state.db();
-        let dao = SaleDao::new(&conn);
+                let month = {
+                    m += (index + 1) as i32;
+                    if m == 13 {
+                        round += 1;
+                    }
+                    if m > 12 {
+                        m = 0;
+                        reset_month += 1;
+                        m += reset_month;
+                    }
+                    if reset_month == 12 {
+                        round += 1;
+                        reset_month = 0;
+                    }
 
-        let filter = QueryFilter {
-            id: payload.id,
-            query: payload.query,
-            month: payload.month,
-            year: payload.year,
+                    m
+                };
+                let year = tmp_year + round;
+
+                ForecastHistory {
+                    sale_value: f.round() as i32,
+                    date: NaiveDate::from_ymd(year, month as u32, 10),
+                }
+            })
+            .collect();
+        forecast.extend(real.clone());
+        forecast.sort_by_key(|a| a.date);
+        real.sort_by_key(|a| a.date);
+
+        let result = ForecastResult {
+            real,
+            forecast,
+            alpha,
         };
 
-        let (entries, count) = dao.get_sales(filter, payload.offset, payload.limit)?;
-
-        Ok(ApiResult::success(EntriesResult { entries, count }))
-    }
-
-    #[route]
-    pub fn get_sale(payload: IdPayload) -> ApiResult<models::SaleItem> {
-        let conn = state.db();
-        let dao = SaleDao::new(&conn);
-
-        let item = dao.get_by_id(payload.id)?;
-
-        Ok(ApiResult::success(item))
-    }
-
-    #[route]
-    pub fn delete_sale(payload: IdPayload) -> ApiResult<String> {
-        let conn = state.db();
-        let dao = SaleDao::new(&conn);
-        let sale = dao.get_by_id(payload.id)?;
-
-        dao.delete(sale.id)?;
-
-        let item_dao = ItemDao::new(&conn);
-        let item = item_dao.get_by_id(sale.item_id)?;
-
-        Ok(ApiResult::success(format!("{} di hapus", &item.item_name)))
+        Ok(ApiResult::success(result))
     }
 }

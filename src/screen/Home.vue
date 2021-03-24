@@ -100,7 +100,7 @@ export default {
     },
     getItems(id = null) {
       this.$api.sale
-        .getSaleHistories(10, 0, { id })
+        .getSaleHistories(24, 0, { id })
         .then((res) => {
           let entries = res.data.entries
           let labels = entries

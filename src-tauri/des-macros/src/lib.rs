@@ -16,6 +16,7 @@ extern crate syn;
 use proc_macro2::{Delimiter, Group, Ident, Literal, Span, TokenStream, TokenTree};
 use quote::quote;
 use serde::{Deserialize, Serialize};
+use syn::parse_macro_input;
 // use syn;
 
 use std::iter::FromIterator;
@@ -54,21 +55,21 @@ pub fn service(
     let mut api_endpoint_info: Vec<ApiEndpoint> = vec![];
 
     let mut new_items: proc_macro2::TokenStream = {
-        let mut to_update = &mut _void;
+        // let mut to_update = &mut _void;
         let items = proc_macro2::TokenStream::from(item.clone());
 
-        for item in items.clone() {
-            match &item {
-                TokenTree::Ident(ident) if ident.to_string() == "impl" => {
-                    to_update = &mut struct_name;
-                }
-                TokenTree::Ident(ident) => {
-                    *to_update = ident.to_string();
-                    to_update = &mut _void;
-                }
-                _ => (),
-            }
-        }
+        // for item in items.clone() {
+        //     match &item {
+        //         TokenTree::Ident(ident) if ident.to_string() == "impl" => {
+        //             to_update = &mut struct_name;
+        //         }
+        //         TokenTree::Ident(ident) => {
+        //             *to_update = ident.to_string();
+        //             to_update = &mut _void;
+        //         }
+        //         _ => (),
+        //     }
+        // }
 
         let new_items: proc_macro2::TokenStream = items
             .into_iter()
@@ -185,28 +186,26 @@ pub fn service(
             let method_name = Ident::new(&aei.method_name, Span::call_site());
             let method = aei.method_name.clone();
             sas.push(quote! {
-                debug!("Calling Service {}::{} | payload: {:?}", stringify!(#struct_name), #method, &payload);
-                if target == #method {
-                    return match serde_json::from_value::<#ty>(payload) {
-                        Ok(payload) => {
-                            #struct_name::#method_name(&state, payload)
-                                .map(|res| serde_json::to_value(res).unwrap())
-                                .map_err(|e| crate::ServiceError::new(e.to_string()))
-                        },
-                        Err(e) => Err(crate::ServiceError::new(e.to_string()))
-                    };
-                }
+                #method => match serde_json::from_value::<#ty>(payload) {
+                    Ok(payload) => {
+                        #struct_name::#method_name(state, payload)
+                            .map(|res| serde_json::to_value(res).unwrap())
+                            .map_err(|e| crate::ServiceError::new(e.to_string()))
+                    },
+                    Err(e) => Err(crate::ServiceError::new(e.to_string()))
+                },
             });
         }
         let sases = TokenStream::from_iter(sas.into_iter());
         quote! {
             impl #struct_name {
                 #[doc(hidden)]
-                pub fn wire(target: std::string::String, payload: serde_json::Value) -> Result<serde_json::Value, crate::ServiceError> {
-                    let state = crate::service::AppState::new();
-                    #sases
-
-                    Err(crate::ServiceError::new("Unknown route".to_string()))
+                pub fn wire(state: &crate::service::AppState, target: std::string::String, payload: serde_json::Value) -> Result<serde_json::Value, crate::ServiceError> {
+                    
+                    match target.as_ref() {
+                        #sases
+                        _ => Err(crate::ServiceError::new("Perintah tidak diketahui".to_string()))
+                    }
                 }
             }
         }
