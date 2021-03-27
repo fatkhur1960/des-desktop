@@ -1,0 +1,2 @@
+DROP TABLE sales;
+DROP TABLE items;

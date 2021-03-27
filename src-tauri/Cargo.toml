@@ -1,0 +1,42 @@
+[package]
+name = "toko-ku"
+version = "0.1.0"
+description = "A Double Exponential Smoothing App"
+authors = [ "fatkhur <fatkhuranonym@gmail.com>" ]
+license = ""
+repository = "https://github.com/fatkhur1960/des-desktop.git"
+default-run = "toko-ku"
+edition = "2018"
+build = "src/build.rs"
+
+[dependencies]
+serde_json = "1.0"
+serde = { version = "1.0", features = [ "derive" ] }
+tauri = { version = "=0.11.1", features = [ "all-api" ] }
+failure = "0.1.8"
+des-macros = { path = "./des-macros" }
+diesel = { version = "1.4.5", features = [ "sqlite", "r2d2", "chrono" ] }
+chrono = { version = "0.4", features = [ "serde" ] }
+dotenv = "0.15.0"
+lazy_static = "1.2"
+bcrypt = "0.9.0"
+reqwest = { version = "0.11", features = [ "json" ] }
+tokio = { version = "1", features = [ "full" ] }
+
+[target."cfg(windows)".build-dependencies]
+winres = "0.1"
+
+[features]
+embedded-server = [ "tauri/embedded-server" ]
+no-server = [ "tauri/no-server" ]
+
+[profile.release]
+panic = "abort"
+codegen-units = 1
+lto = true
+incremental = false
+opt-level = "z"
+
+[[bin]]
+name = "toko-ku"
+path = "src/main.rs"
