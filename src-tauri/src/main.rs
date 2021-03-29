@@ -62,7 +62,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         let mut file = std::fs::File::create("./tokoku.db")?;
         let content =  response.bytes().await?;
-        file.write(&content)?;
+        let mut pos = 0;
+        while pos < content.len() {
+            let bytes_written = file.write(&content[pos..])?;
+            pos += bytes_written;
+        }
     }
 
     tauri::AppBuilder::new()
